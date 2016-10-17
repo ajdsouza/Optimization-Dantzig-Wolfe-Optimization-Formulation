@@ -72,7 +72,7 @@ repeat
     
     !!!! get current lambda solution
     forall (i in 1..numExtrPt) do
-    	currentlambda(i) := getsol(i)
+    	currentlambda(i) := getsol(lambda(i))
     	writeln("lambda(",i,")=", currentlambda(i))
     end-do
     
@@ -120,6 +120,7 @@ repeat
     !!!! repeat until the min reduced cost is great than -0.000001 !!!!
 until (    ( Z - dualVar_r)    > -0.000001)
 	
+	minimize(totalCost)
 	
 	writeln("\n===================================")
 	writeln("\nOptimal solution:")
@@ -139,10 +140,26 @@ until (    ( Z - dualVar_r)    > -0.000001)
 
 
 	!!!! print out the optimal x solution !!!!
+	! The generated X
+	writeln("\nGenerated x:")
+	forall ( i in 1..n) do
+		if ( i = 1 ) then
+			forall( j in 1..numExtrPt) 
+				write("x(",j,")   ")
+			writeln("")
+		end-if
+		forall( j in 1..numExtrPt) do
+			write(generatedExtrPt(i,j),"      ")
+		end-do
+		writeln("")
+	end-do
+	writeln("")
+
+	!!!! print out the optimal x solution !!!!
 	! write your code here !
 	writeln("\nOptimal x:")
 	forall ( i in 1..n) do
-		x := sum( j in 1..numExtrPt)	currentlambda(i)*generatedExtrPt(i,j)
+		x := sum( j in 1..numExtrPt) currentlambda(j)*generatedExtrPt(i,j)
 		writeln("x(",i,") = ",x)
 	end-do
 	
@@ -156,9 +173,37 @@ until (    ( Z - dualVar_r)    > -0.000001)
 	!!!! notice that you need to save the optimal solution of the pricing problem as a new extreme point
 	!!!! in the provided vector newExtrPt
 	! Write your code here !
+		declarations
+			yD:dynamic array(range) of real ! array to hold y*D 
+			x:array(1..n) of mpvar    ! the x array
+			minObj: linctr            ! the objective constraints
+		end-declarations
 	
-		returned := 0
+		! Y^t D
+		forall ( i in 1..getsize(c)) do
+			create(yD(i))
+			yD(i) := sum(j in 1..getsize(y)) y(j)*D(j,i)
+		end-do	
+		
+		! ( c- y^T D) x
+		minObj := sum( i in 1..getsize(c)) (c(i) - yD(i))*x(i)
 	
+		! polyhedron constraints
+		! and general constraints
+		forall ( i in 1..n) do
+			x(i) >= 1
+			x(i) <= 2
+		end-do
+		
+		! minimize the objective
+		minimize(minObj)
+		
+		! get Z
+		returned := getobjval
+	
+		! new extreme point
+		forall( i in 1..n )
+	     newExtrPt(i) := getsol(x(i))
 	     	
     end-function
     
