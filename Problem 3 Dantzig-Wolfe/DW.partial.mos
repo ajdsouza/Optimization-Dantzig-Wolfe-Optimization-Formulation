@@ -2,8 +2,10 @@ model ModelName
 uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 uses "mmsystem"
 
+! prob1 & prob 2
 n := 5  ! number of variables
 m := 1  ! number of coupling constraints
+
 
 forward function pricing(c: array(range) of real, D : array(range, range) of real, y : array(range) of real):real
 
@@ -28,11 +30,14 @@ declarations
     
 end-declarations
 
+! prob 1 & prob 2
 c :: [-4, -1, -6, -3, -5]
 D :: [3, 2, 4, 3, 5]
 b0 :: [25]
 
-generatedExtrPt(1,1) := 1
+
+!prob1
+(!generatedExtrPt(1,1) := 1
 generatedExtrPt(2,1) := 2
 generatedExtrPt(3,1) := 1
 generatedExtrPt(4,1) := 1
@@ -42,7 +47,19 @@ generatedExtrPt(2,2) := 2
 generatedExtrPt(3,2) := 2
 generatedExtrPt(4,2) := 1
 generatedExtrPt(5,2) := 1
-!end-do  
+!)
+
+!prob2
+generatedExtrPt(1,1) := 1
+generatedExtrPt(2,1) := 1
+generatedExtrPt(3,1) := 1
+generatedExtrPt(4,1) := 1
+generatedExtrPt(5,1) := 1
+generatedExtrPt(1,2) := 3
+generatedExtrPt(2,2) := 3
+generatedExtrPt(3,2) := 3
+generatedExtrPt(4,2) := 3
+generatedExtrPt(5,2) := 3
 
 numExtrPt := m+1 
 
@@ -141,7 +158,7 @@ until (    ( Z - dualVar_r)    > -0.000001)
 
 	!!!! print out the optimal x solution !!!!
 	! The generated X
-	writeln("\nGenerated x:")
+	writeln("\n\nGenerated Extreme points x:")
 	forall ( i in 1..n) do
 		if ( i = 1 ) then
 			forall( j in 1..numExtrPt) 
@@ -192,7 +209,7 @@ until (    ( Z - dualVar_r)    > -0.000001)
 		! and general constraints
 		forall ( i in 1..n) do
 			x(i) >= 1
-			x(i) <= 2
+			x(i) <= 3
 		end-do
 		
 		! minimize the objective
