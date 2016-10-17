@@ -1,16 +1,24 @@
 model Kantorovich
 uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 
+! cs1.dat - 8, cs2.dat-13, kant1.dat - 4 , kant2.dat - 5
 declarations
 	W : integer       	 				! the width of the large rolls
 	m = 4		                        ! the number of different types of small rolls demanded
-	K = 500                             ! number of available large rolls
-	kRange = 1 .. K       			    ! the index of large rolls
+	K:integer                           ! number of available large rolls
+	!kRange = 1 .. K       			    ! the index of large rolls
 	iRange = 1 .. m      		 		! the index of types of small rolls
 	w : array(iRange) of integer 		! widths of the small rolls
 	b : array(iRange) of integer 		! demand of the small rolls
-	y : array(kRange) of mpvar 			! y(k)=1 if roll k is cut, 0 ow
-	x : array(kRange, iRange) of mpvar  ! x(k,i) number of times an item of width wi is cut on roll k
+	y : dynamic array(range) of mpvar 			! y(k)=1 if roll k is cut, 0 ow
+	x : dynamic array(range, iRange) of mpvar  ! x(k,i) number of times an item of width wi is cut on roll k
+	
+	minRolls:linctr                      ! objective constraint
+	constr1:dynamic array(range) of linctr      ! constraint 1, <= W
+	constr2:array(iRange) of linctr      ! constraint 2, demand >= b
+	
+	totalUsedPaper:real                  ! the total used paper
+		
 end-declarations
 
 initializations from 'kant1.dat'
@@ -18,27 +26,46 @@ initializations from 'kant1.dat'
 end-initializations
 
 
+! determing the maximim K value 
+K := 0
+forall ( i in iRange) do
+	K += ceil( b(i) / (floor(W/(w(i)))) )
+end-do
+
 
 ! objective function 
 !!!!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!
-	 
-
+forall (k in 1..K)
+	create(y(k))
+	
+minRolls := sum (k in 1..K) y(k)	 
 
 
 ! constraints-1
 !!!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!
+forall ( k in 1..K ) do
+	forall ( i in iRange )
+	create(x(k,i))
+end-do
 
+
+forall ( k in 1..K ) do
+	create(constr1(k))
+	constr1(k) := sum ( i in iRange ) x(k,i)*w(i) <= y(k)*W
+end-do
 
 
 	
 ! constraints-2	
 !!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!!	
-
+forall ( i in iRange ) do
+	 constr2(i) := sum ( k in 1..K ) x(k,i) >= b(i)
+end-do
 
 
 ! bounds on variables and integrality constraints 
 ! note how to constrain a variable to be integral. you will need to use it in the part 2 of this problem.
-forall (k in kRange, i in iRange) do
+forall (k in 1..K, i in iRange) do
 	x(k,i)>=0
 	y(k)>=0
 	y(k)<=1
@@ -46,26 +73,31 @@ forall (k in kRange, i in iRange) do
 	x(k,i) is_integer
 end-do
 
+
 ! solve the problem
 !!!!!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!
-
+minimize(minRolls)
 
 
 
 ! print out the objective value and the nonzero optimal variables
+
 writeln("obj=",getobjval)
-forall (k in kRange) do
+forall (k in 1..K) do
+	totalUsedPaper := 0
 	if (getsol(y(k))>0) then
 		writeln("y(",k,")=", getsol(y(k)))
 		forall (i in iRange) do
 			if (getsol(x(k,i))>0) then
 				writeln(getsol(x(k,i)), " copies of width ", w(i))
+				totalUsedPaper += getsol(x(k,i))*w(i)
 			end-if	
 		end-do	
-	end-if
+		
 		!!! write your code here to compute the unused width of the paper in this big role = W - total used paper !!!
-		writeln("unused width=", ) !!! write your code to complete the writeln !!!
+		writeln("unused width=", W-totalUsedPaper) !!! write your code to complete the writeln !!!
 		writeln("\n")
+	
 	end-if
 	
 end-do
