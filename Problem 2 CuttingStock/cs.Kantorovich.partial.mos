@@ -4,9 +4,11 @@ uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 ! cs1.dat - 8, cs2.dat-13, kant1.dat - 4 , kant2.dat - 5
 declarations
 	W : integer       	 				! the width of the large rolls
-	m = 4		                        ! the number of different types of small rolls demanded
+	m = 8		                        ! the number of different types of small rolls demanded
 	K:integer                           ! number of available large rolls
-	!kRange = 1 .. K       			    ! the index of large rolls
+	!kRange = 1 .. K       			    ! the index of large rolls, commenting as we will determine a better bound
+	                                    ! based on the data read from file - Student license of express 
+	                                    ! has limits on the number of variables+const <= 400
 	iRange = 1 .. m      		 		! the index of types of small rolls
 	w : array(iRange) of integer 		! widths of the small rolls
 	b : array(iRange) of integer 		! demand of the small rolls
@@ -21,7 +23,7 @@ declarations
 		
 end-declarations
 
-initializations from 'kant1.dat'
+initializations from 'cs1.dat'
 	W w b
 end-initializations
 
@@ -31,7 +33,9 @@ K := 0
 forall ( i in iRange) do
 	K += ceil( b(i) / (floor(W/(w(i)))) )
 end-do
-
+if ( K > 500 ) then
+	K := 500
+end-if
 
 ! objective function 
 !!!!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!
@@ -67,9 +71,10 @@ end-do
 ! note how to constrain a variable to be integral. you will need to use it in the part 2 of this problem.
 forall (k in 1..K, i in iRange) do
 	x(k,i)>=0
-	y(k)>=0
-	y(k)<=1
-	y(k) is_integer
+	!y(k)>=0
+	!y(k)<=1
+	!y(k) is_integer
+	y(k) is_binary
 	x(k,i) is_integer
 end-do
 
