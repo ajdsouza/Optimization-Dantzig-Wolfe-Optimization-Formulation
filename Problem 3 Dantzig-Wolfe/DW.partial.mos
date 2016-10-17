@@ -22,6 +22,10 @@ declarations
     Z : real ! optimal objective value of the pricing problem
     currentlambda : dynamic array(range) of real ! holding the optimal solution of the current RMP
     lambda : dynamic array(range) of mpvar ! lambda variable
+    
+    couplingConstr: array(constrRange) of linctr   ! m coupling constraints
+    convexityConstr: linctr                        ! convexity constraint
+    
 end-declarations
 
 c :: [-4, -1, -6, -3, -5]
@@ -38,28 +42,26 @@ generatedExtrPt(2,2) := 2
 generatedExtrPt(3,2) := 2
 generatedExtrPt(4,2) := 1
 generatedExtrPt(5,2) := 1
-create(lambda(1))
-create(lambda(2))
-lambda(1)>=0
-lambda(2)>=0
 !end-do  
 
 numExtrPt := m+1 
 
+! lambda are created for the generated points
+forall ( i in 1..numExtrPt) do
+	create(lambda(i))
+	lambda(i)>=0
+end-do
+
 !!!! Write the objective function of the restricted master problem
-totalCost := 
-
-
+totalCost := sum(i in 1..numExtrPt, j in 1..n) lambda(i)*c(j)*generatedExtrPt(j,i)
 
 !!!! Write coupling constraint
-forall (i in constrRange)
-	couplingConstr(i) := 
-
+forall (i in constrRange) do
+	couplingConstr(i) :=  sum ( l in 1..numExtrPt, j in 1..n ) lambda(l)*D(i,j)*generatedExtrPt(j,l) <= b0(i)
+end-do
 
 !!!! Write the convexity constraint
-convexityConstr :=
-
-
+convexityConstr :=  sum ( i in 1..numExtrPt) lambda(i) = 1
 
 repeat 
 	!!!! solve the restricted master problem using the variables that have been generated so far
@@ -70,44 +72,56 @@ repeat
     
     !!!! get current lambda solution
     forall (i in 1..numExtrPt) do
-    	currentlambda(i) :=
+    	currentlambda(i) := getsol(i)
     	writeln("lambda(",i,")=", currentlambda(i))
     end-do
     
     !!!! get the dual solution !!!!
     forall (i in constrRange) do
-    	dualVar_y(i) := 
+    	dualVar_y(i) := getdual(couplingConstr(i))
     	writeln("dual var of coupling constraint(", i, ")=", dualVar_y(i))
     end-do
-    dualVar_r := 
+    dualVar_r := getdual(convexityConstr)
     writeln("dual var of convexity constraint=", dualVar_r)
     
     !!!! solve the pricing problem !!!!
     Z := pricing(c, D, dualVar_y)
     writeln("min reduced cost=", Z)
     
-    
     !!!! If min reduced cost is less than -0.000001, then found a new extreme point !!!!
     !!!! You need to figure out how to compute the min reduced cost !!!!
-    if (            < -0.000001) then
+    if (  ( Z - dualVar_r)    < -0.000001) then
     	writeln("found a new extreme point")
     	
     	!!!! write you own code here to add the new column to the lambda problem !!!!
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
+    	numExtrPt += 1
+    	forall (i in 1..n) do
+    		create(generatedExtrPt(i,numExtrPt))
+    		generatedExtrPt(i,numExtrPt) := newExtrPt(i)
+    	end-do
+ 
+     	! lambda are created for the generated point   	
+    	create(lambda(numExtrPt))
+    	lambda(numExtrPt) >= 0
+
+    	!!!! update the objective function of the restricted master problem
+		totalCost += sum(j in 1..n) lambda(numExtrPt)*c(j)*generatedExtrPt(j,numExtrPt)
+
+		!!!! update coupling constraint
+		forall (i in constrRange) do
+			couplingConstr(i) +=  sum (j in 1..n ) lambda(numExtrPt)*D(i,j)*generatedExtrPt(j,numExtrPt)
+		end-do
+
+		!!!! update the convexity constraint
+		convexityConstr +=  lambda(numExtrPt)	
     	
     end-if 
     
     !!!! repeat until the min reduced cost is great than -0.000001 !!!!
-until (         > -0.000001)
+until (    ( Z - dualVar_r)    > -0.000001)
 	
 	
+	writeln("\n===================================")
 	writeln("\nOptimal solution:")
 	
 	
@@ -116,12 +130,21 @@ until (         > -0.000001)
 	!!!! the optimal lambda solution from the RMP is lost. That's why we save the optimal lambda into the
 	!!!! vector currentlambda right after solving the RMP. Use it here
     ! Write your code here !
-
+    
+	! lambda are created for the generated points
+	writeln("\nlambda:")
+	forall ( i in 1..numExtrPt) do
+		writeln("lambda(",i,") = ",currentlambda(i))	
+	end-do
 
 
 	!!!! print out the optimal x solution !!!!
 	! write your code here !
-	
+	writeln("\nOptimal x:")
+	forall ( i in 1..n) do
+		x := sum( j in 1..numExtrPt)	currentlambda(i)*generatedExtrPt(i,j)
+		writeln("x(",i,") = ",x)
+	end-do
 	
 		
 		
@@ -134,7 +157,7 @@ until (         > -0.000001)
 	!!!! in the provided vector newExtrPt
 	! Write your code here !
 	
-	
+		returned := 0
 	
 	     	
     end-function
