@@ -4,7 +4,7 @@ uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 ! cs1.dat - 8, cs2.dat-13, kant1.dat - 4 , kant2.dat - 5
 declarations
 	W : integer       	 				! the width of the large rolls
-	m = 8		                        ! the number of different types of small rolls demanded
+	m = 13		                        ! the number of different types of small rolls demanded
 	K:integer                           ! number of available large rolls
 	!kRange = 1 .. K       			    ! the index of large rolls, commenting as we will determine a better bound
 	                                    ! based on the data read from file - Student license of express 
@@ -23,7 +23,7 @@ declarations
 		
 end-declarations
 
-initializations from 'cs1.dat'
+initializations from 'cs2.dat'
 	W w b
 end-initializations
 
@@ -33,9 +33,9 @@ K := 0
 forall ( i in iRange) do
 	K += ceil( b(i) / (floor(W/(w(i)))) )
 end-do
-if ( K > 500 ) then
-	K := 500
-end-if
+!if ( K > 1000 ) then
+!	K := 1000
+!end-if
 
 ! objective function 
 !!!!!!!!!!!!!!!!! Write your code here !!!!!!!!!!!!!!!!!!
