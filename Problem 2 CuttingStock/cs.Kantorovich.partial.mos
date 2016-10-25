@@ -4,7 +4,7 @@ uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 ! cs1.dat - 8, cs2.dat-13, kant1.dat - 4 , kant2.dat - 5
 declarations
 	W : integer       	 				! the width of the large rolls
-	m = 13		                        ! the number of different types of small rolls demanded
+	m = 4		                        ! the number of different types of small rolls demanded
 	K:integer                           ! number of available large rolls
 	!kRange = 1 .. K       			    ! the index of large rolls, commenting as we will determine a better bound
 	                                    ! based on the data read from file - Student license of express 
@@ -20,10 +20,13 @@ declarations
 	constr2:array(iRange) of linctr      ! constraint 2, demand >= b
 	
 	totalUsedPaper:real                  ! the total used paper
+	
+	intCount,totalCount:integer    ! keep count of the number of integer in the solution if is_integer
+	                                     ! is not specified
 		
 end-declarations
 
-initializations from 'cs2.dat'
+initializations from 'kant1.dat'
 	W w b
 end-initializations
 
@@ -107,5 +110,23 @@ forall (k in 1..K) do
 	
 end-do
 
-	
+! count of the integer solutions
+intCount := 0
+totalCount := 0
+forall (k in 1..K) do
+	forall (i in iRange) do
+		if getsol(y(k))*getsol(x(k,i)) > 0 then
+			!writeln(floor(getsol(y(k))*getsol(x(k,i))),":",getsol(y(k))*getsol(x(k,i)))
+			if ( (getsol(y(k))*getsol(x(k,i)) - floor(getsol(y(k))*getsol(x(k,i)))) = 0 ) then
+				intCount += 1	
+			end-if
+			totalCount += 1
+		end-if
+	end-do		
+end-do
+
+writeln("\n")
+writeln("Total Number of solutions for the LP :",totalCount)
+writeln("Number of Integer solution :",intCount)
+
 end-model
