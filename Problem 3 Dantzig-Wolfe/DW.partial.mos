@@ -37,7 +37,8 @@ b0 :: [25]
 
 
 !prob1
-(!generatedExtrPt(1,1) := 1
+(!
+generatedExtrPt(1,1) := 1
 generatedExtrPt(2,1) := 2
 generatedExtrPt(3,1) := 1
 generatedExtrPt(4,1) := 1
@@ -143,6 +144,8 @@ until (    ( Z - dualVar_r)    > -0.000001)
 	writeln("\nOptimal solution:")
 	
 	
+	writeln("Optimum obj of MP = ", getobjval)
+	
 	!!!! print out the optimal lambda solution !!!!
 	!!!! notice that in the above code, after solving the RMP, you solve the pricing problem, therefore, 
 	!!!! the optimal lambda solution from the RMP is lost. That's why we save the optimal lambda into the
@@ -187,7 +190,8 @@ until (    ( Z - dualVar_r)    > -0.000001)
     function pricing(c: array(range) of real, D : array(range,range) of real, y : array(range) of real):real
 
 	!!!! write your pricing function code here!!!!
-	!!!! notice that you need to save the optimal solution of the pricing problem as a new extreme point
+	!!!! notice that you need to save the optimal solution of the 
+	!!!! pricing problem as a new extreme point
 	!!!! in the provided vector newExtrPt
 	! Write your code here !
 		declarations
