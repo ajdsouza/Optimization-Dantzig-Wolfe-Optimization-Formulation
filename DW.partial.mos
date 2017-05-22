@@ -1,3 +1,9 @@
+!
+! author : ajay dsouza
+! desc   :  Dantzig Wolfe Formulation for solving RMP and Pricing Problem
+!           Using Mosel Xpress
+!
+
 model ModelName
 uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 uses "mmsystem"
